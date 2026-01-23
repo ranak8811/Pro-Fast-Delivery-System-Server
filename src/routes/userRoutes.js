@@ -6,6 +6,7 @@ const createUserRoutes = (usersCollection, verifyFBToken, verifyAdmin) => {
   const userController = createUserControllers(usersCollection);
 
   router.post("/", userController.createUser);
+  router.get("/:email", userController.getUserDetails);
   router.get("/search", userController.searchUsers);
   router.get("/:email/role", userController.getUserRole);
   router.patch(

@@ -15,6 +15,18 @@ const createUserControllers = (usersCollection) => {
     res.send(result);
   };
 
+  const getUserDetails = async (req, res) => {
+    const email = req.params.email;
+
+    try {
+      const user = await usersCollection.findOne({ email });
+      res.send(user);
+    } catch (error) {
+      console.error("Error getting user details", error);
+      res.status(500).send({ message: "Error getting user details" });
+    }
+  };
+
   const searchUsers = async (req, res) => {
     const emailQuery = req.query.email;
     if (!emailQuery) {
@@ -79,6 +91,7 @@ const createUserControllers = (usersCollection) => {
 
   return {
     createUser,
+    getUserDetails,
     searchUsers,
     getUserRole,
     updateUserRole,
