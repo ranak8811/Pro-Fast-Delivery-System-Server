@@ -31,6 +31,11 @@ const createEmployeeRoutes = (
   router.get("/available", employeeController.getAvailableRiders); // No middleware for available riders
   router.patch("/:id/status", employeeController.updateRiderStatus);
   router.get("/parcels", verifyFBToken, employeeController.getRiderParcels); // For specific rider's parcels
+  router.get(
+    "/dashboard-summary",
+    verifyFBToken,
+    employeeController.getRiderDashboardSummary,
+  );
 
   return router;
 };

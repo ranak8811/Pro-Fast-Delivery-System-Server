@@ -68,7 +68,7 @@ async function run() {
     );
     app.use(
       "/users",
-      createUserRoutes(usersCollection, verifyFBToken, verifyAdmin),
+      createUserRoutes(usersCollection, parcelsCollection, verifyFBToken, verifyAdmin),
     );
     app.use(
       "/business",
@@ -89,7 +89,15 @@ async function run() {
         verifyAdmin,
       ),
     );
-    app.use("/tracking", createTrackingRoutes(trackingsCollection));
+    app.use(
+      "/tracking",
+      createTrackingRoutes(
+        trackingsCollection,
+        parcelsCollection,
+        ridersCollection,
+        paymentsCollection,
+      ),
+    );
 
     //--------------------API Ends---------------------------
 
