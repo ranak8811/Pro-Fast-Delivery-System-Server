@@ -10,8 +10,14 @@ const stripe = require("stripe")(config.stripeKey);
 const app = express();
 const port = config.port;
 
+const corsOptions = {
+  origin: ["http://localhost:5173", "https://zap-shift-abec3.web.app"],
+  credentials: true,
+  optionalSuccessStatus: 200,
+};
+
 // Middlewares
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 
 admin.initializeApp({
@@ -68,7 +74,12 @@ async function run() {
     );
     app.use(
       "/users",
-      createUserRoutes(usersCollection, parcelsCollection, verifyFBToken, verifyAdmin),
+      createUserRoutes(
+        usersCollection,
+        parcelsCollection,
+        verifyFBToken,
+        verifyAdmin,
+      ),
     );
     app.use(
       "/business",
