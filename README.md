@@ -1,6 +1,6 @@
-# Zap-Shift Server
+# Pro Fast Delivery System Server
 
-This repository contains the backend server for the Zap-Shift application, built with Node.js and Express.js. It provides a robust API for managing users, business operations, employees (riders), payments, and tracking functionalities, leveraging MongoDB for data storage, Firebase for authentication, and Stripe for payment processing.
+This repository contains the backend server for the Pro Fast Delivery System application, built with Node.js and Express.js. It provides a robust API for managing users, business operations, employees (riders), payments, and tracking functionalities, leveraging MongoDB for data storage, Firebase for authentication, and Stripe for payment processing.
 
 ## Features
 
