@@ -27,7 +27,6 @@ const createAuthMiddleware = (usersCollection) => {
     const email = req.decoded.email;
     const query = { email };
     const user = await usersCollection.findOne(query);
-    console.log("verify admin user role: ", user.role);
     if (!user || user.role !== "admin") {
       return res.status(403).send({ message: "forbidden access" });
     }
@@ -38,7 +37,6 @@ const createAuthMiddleware = (usersCollection) => {
     const email = req.decoded.email;
     const query = { email };
     const user = await usersCollection.findOne(query);
-    console.log("verify rider user role: ", user.role);
     if (!user || user.role !== "rider") {
       return res.status(403).send({ message: "forbidden access" });
     }

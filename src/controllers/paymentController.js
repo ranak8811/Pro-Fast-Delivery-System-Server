@@ -71,7 +71,6 @@ const createPaymentControllers = (
     try {
       const userEmail = req.query.email;
 
-      console.log("decoded: ", req.decoded);
       if (req.decoded.email !== userEmail) {
         return res.status(403).send({ message: "Forbidden Access" });
       }

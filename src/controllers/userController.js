@@ -91,7 +91,6 @@ const createUserControllers = (usersCollection, parcelsCollection) => {
 
   const getUserDashboardSummary = async (req, res) => {
     try {
-      console.log("getUserDashboardSummary function hit!");
       const email = req.query.email;
       if (!email) {
         return res.status(400).send({ message: "User email is required" });
@@ -101,10 +100,7 @@ const createUserControllers = (usersCollection, parcelsCollection) => {
         .find({ created_by: email })
         .toArray();
 
-      console.log("user parcel history", userParcels);
-
       const totalParcels = userParcels.length;
-      console.log(totalParcels);
 
       const parcelStatusCounts = userParcels.reduce((acc, parcel) => {
         acc[parcel.delivery_status] = (acc[parcel.delivery_status] || 0) + 1;

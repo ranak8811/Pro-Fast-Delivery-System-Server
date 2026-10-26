@@ -21,8 +21,6 @@ const createParcelControllers = (parcelsCollection, ridersCollection) => {
         sort: { createdAt: -1 }, // Newest first
       };
 
-      console.log("parcel query", req.query, query);
-
       const parcels = await parcelsCollection.find(query, options).toArray();
       res.send(parcels);
     } catch (error) {
@@ -38,8 +36,6 @@ const createParcelControllers = (parcelsCollection, ridersCollection) => {
       if (!email) {
         return res.status(400).send({ message: "Rider email is required" });
       }
-
-      console.log("getCompletedParcelsForRider: ", email);
 
       const query = {
         assigned_rider_email: email,

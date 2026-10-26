@@ -73,7 +73,6 @@ const createEmployeeControllers = (
           userQuery,
           userUpdatedDoc,
         );
-        console.log("role update for rider: ", roleResult.modifiedCount);
       }
 
       res.send(result);
@@ -117,8 +116,6 @@ const createEmployeeControllers = (
       const riderParcels = await parcelsCollection
         .find({ assigned_rider_email: email })
         .toArray();
-
-      console.log("rideer parcel history", riderParcels);
 
       const totalDeliveriesCompleted = riderParcels.filter(
         (parcel) => parcel.delivery_status === "delivered",
