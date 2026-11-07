@@ -1,4 +1,4 @@
-const admin = require("firebase-admin");
+import admin from "firebase-admin";
 
 const createAuthMiddleware = (usersCollection) => {
   const verifyFBToken = async (req, res, next) => {
@@ -50,4 +50,4 @@ const createAuthMiddleware = (usersCollection) => {
   };
 };
 
-module.exports = createAuthMiddleware;
+export default createAuthMiddleware;

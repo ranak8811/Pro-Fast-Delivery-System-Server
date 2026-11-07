@@ -1,4 +1,4 @@
-const { ObjectId } = require("mongodb");
+import { ObjectId } from "mongodb";
 
 const createPaymentControllers = (
   parcelsCollection,
@@ -93,4 +93,4 @@ const createPaymentControllers = (
   };
 };
 
-module.exports = createPaymentControllers;
+export default createPaymentControllers;

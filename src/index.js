@@ -1,17 +1,27 @@
-const express = require("express");
-const cors = require("cors");
-const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-const admin = require("firebase-admin");
-const config = require("./config/config");
-const createAuthMiddleware = require("./middleware/authMiddleware");
+import express from "express";
+import cors from "cors";
+import { MongoClient, ServerApiVersion } from "mongodb";
+import admin from "firebase-admin";
+import Stripe from "stripe";
+import config from "./config/config.js";
+import createAuthMiddleware from "./middleware/authMiddleware.js";
+import createPaymentRoutes from "./routes/paymentRoutes.js";
+import createUserRoutes from "./routes/userRoutes.js";
+import createBusinessRoutes from "./routes/businessRoutes.js";
+import createEmployeeRoutes from "./routes/employeeRoutes.js";
+import createTrackingRoutes from "./routes/trackingRoutes.js";
 
-const stripe = require("stripe")(config.stripeKey);
+const stripe = new Stripe(config.stripeKey);
 
 const app = express();
 const port = config.port;
 
 const corsOptions = {
-  origin: ["http://localhost:5173", "https://zap-shift-abec3.web.app"],
+  origin: [
+    "http://localhost:5173",
+    "https://zap-shift-abec3.web.app",
+    "https://zap-shift-abec3.firebaseapp.com",
+  ],
   credentials: true,
   optionalSuccessStatus: 200,
 };
@@ -39,9 +49,6 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
-    // await client.connect();
-
     const db = client.db("parcelDB");
     const parcelsCollection = db.collection("parcels");
     const usersCollection = db.collection("users");
@@ -56,12 +63,6 @@ async function run() {
     //--------------------Middle Ware Ends---------------------------
 
     //--------------------API Starts---------------------------
-
-    const createPaymentRoutes = require("./routes/paymentRoutes");
-    const createUserRoutes = require("./routes/userRoutes");
-    const createBusinessRoutes = require("./routes/businessRoutes");
-    const createEmployeeRoutes = require("./routes/employeeRoutes");
-    const createTrackingRoutes = require("./routes/trackingRoutes");
 
     app.use(
       "/payment",
@@ -113,7 +114,6 @@ async function run() {
     //--------------------API Ends---------------------------
   } finally {
     // Ensures that the client will close when you finish/error
-    // await client.close();
   }
 }
 run().catch(console.dir);
@@ -128,4 +128,4 @@ app.listen(port, () => {
   console.log(`Percel Server is running on port ${port}`);
 });
 
-module.exports = app;
+export default app;

@@ -1,5 +1,5 @@
-const express = require("express");
-const createParcelControllers = require("../controllers/businessController");
+import express from "express";
+import createParcelControllers from "../controllers/businessController.js";
 
 const createBusinessRoutes = (
   parcelsCollection,
@@ -31,4 +31,4 @@ const createBusinessRoutes = (
   return router;
 };
 
-module.exports = createBusinessRoutes;
+export default createBusinessRoutes;

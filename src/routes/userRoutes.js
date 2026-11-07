@@ -1,5 +1,5 @@
-const express = require("express");
-const createUserControllers = require("../controllers/userController");
+import express from "express";
+import createUserControllers from "../controllers/userController.js";
 
 const createUserRoutes = (
   usersCollection,
@@ -37,4 +37,4 @@ const createUserRoutes = (
   return router;
 };
 
-module.exports = createUserRoutes;
+export default createUserRoutes;

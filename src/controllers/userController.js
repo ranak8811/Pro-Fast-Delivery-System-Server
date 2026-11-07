@@ -1,4 +1,4 @@
-const { ObjectId } = require("mongodb");
+import { ObjectId } from "mongodb";
 
 const createUserControllers = (usersCollection, parcelsCollection) => {
   const createUser = async (req, res) => {
@@ -177,4 +177,4 @@ const createUserControllers = (usersCollection, parcelsCollection) => {
   };
 };
 
-module.exports = createUserControllers;
+export default createUserControllers;

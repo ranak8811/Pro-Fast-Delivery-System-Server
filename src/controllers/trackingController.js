@@ -1,4 +1,4 @@
-const { ObjectId } = require("mongodb");
+import { ObjectId } from "mongodb";
 
 const createTrackingControllers = (
   trackingsCollection,
@@ -108,4 +108,4 @@ const createTrackingControllers = (
   };
 };
 
-module.exports = createTrackingControllers;
+export default createTrackingControllers;

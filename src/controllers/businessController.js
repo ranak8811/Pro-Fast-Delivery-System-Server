@@ -1,4 +1,4 @@
-const { ObjectId } = require("mongodb");
+import { ObjectId } from "mongodb";
 
 const createParcelControllers = (parcelsCollection, ridersCollection) => {
   const getParcels = async (req, res) => {
@@ -208,4 +208,4 @@ const createParcelControllers = (parcelsCollection, ridersCollection) => {
   };
 };
 
-module.exports = createParcelControllers;
+export default createParcelControllers;

@@ -1,4 +1,4 @@
-const { ObjectId } = require("mongodb");
+import { ObjectId } from "mongodb";
 
 const createEmployeeControllers = (
   ridersCollection,
@@ -216,4 +216,4 @@ const createEmployeeControllers = (
   };
 };
 
-module.exports = createEmployeeControllers;
+export default createEmployeeControllers;

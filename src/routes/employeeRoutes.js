@@ -1,5 +1,5 @@
-const express = require("express");
-const createEmployeeControllers = require("../controllers/employeeController");
+import express from "express";
+import createEmployeeControllers from "../controllers/employeeController.js";
 
 const createEmployeeRoutes = (
   ridersCollection,
@@ -40,4 +40,4 @@ const createEmployeeRoutes = (
   return router;
 };
 
-module.exports = createEmployeeRoutes;
+export default createEmployeeRoutes;

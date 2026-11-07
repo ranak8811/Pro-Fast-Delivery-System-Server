@@ -1,5 +1,5 @@
-const express = require("express");
-const createPaymentControllers = require("../controllers/paymentController");
+import express from "express";
+import createPaymentControllers from "../controllers/paymentController.js";
 
 const createPaymentRoutes = (
   parcelsCollection,
@@ -24,4 +24,4 @@ const createPaymentRoutes = (
   return router;
 };
 
-module.exports = createPaymentRoutes;
+export default createPaymentRoutes;
