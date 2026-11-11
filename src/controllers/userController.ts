@@ -1,12 +1,25 @@
-import { ObjectId } from "mongodb";
+import { Request, Response } from "express";
+import { Collection, ObjectId } from "mongodb";
 
-const createUserControllers = (usersCollection, parcelsCollection) => {
-  const createUser = async (req, res) => {
+export interface UserController {
+  createUser: (req: Request, res: Response) => Promise<any>;
+  getUserDetails: (req: Request, res: Response) => Promise<any>;
+  searchUsers: (req: Request, res: Response) => Promise<any>;
+  getUserRole: (req: Request, res: Response) => Promise<any>;
+  updateUserRole: (req: Request, res: Response) => Promise<any>;
+  getUserDashboardSummary: (req: Request, res: Response) => Promise<any>;
+  getUserParcels: (req: Request, res: Response) => Promise<any>;
+}
+
+const createUserControllers = (
+  usersCollection: Collection<any>,
+  parcelsCollection: Collection<any>
+): UserController => {
+  const createUser = async (req: Request, res: Response): Promise<any> => {
     const email = req.body.email;
 
     const userExists = await usersCollection.findOne({ email });
     if (userExists) {
-      // update last login time
       return res.send({ message: "User already exists" });
     }
 
@@ -15,7 +28,7 @@ const createUserControllers = (usersCollection, parcelsCollection) => {
     res.send(result);
   };
 
-  const getUserDetails = async (req, res) => {
+  const getUserDetails = async (req: Request, res: Response): Promise<any> => {
     const email = req.params.email;
 
     try {
@@ -27,8 +40,8 @@ const createUserControllers = (usersCollection, parcelsCollection) => {
     }
   };
 
-  const searchUsers = async (req, res) => {
-    const emailQuery = req.query.email;
+  const searchUsers = async (req: Request, res: Response): Promise<any> => {
+    const emailQuery = req.query.email as string | undefined;
     if (!emailQuery) {
       return res.status(400).send({ message: "Missing email query" });
     }
@@ -38,7 +51,6 @@ const createUserControllers = (usersCollection, parcelsCollection) => {
     try {
       const users = await usersCollection
         .find({ email: { $regex: regex } })
-        // .project({ email: 1, createdAt: 1, role: 1 })
         .limit(10)
         .toArray();
       res.send(users);
@@ -48,7 +60,7 @@ const createUserControllers = (usersCollection, parcelsCollection) => {
     }
   };
 
-  const getUserRole = async (req, res) => {
+  const getUserRole = async (req: Request, res: Response): Promise<any> => {
     try {
       const email = req.params.email;
 
@@ -57,7 +69,6 @@ const createUserControllers = (usersCollection, parcelsCollection) => {
       }
 
       const user = await usersCollection.findOne({ email });
-
       if (!user) {
         return res.status(404).send({ message: "User not found" });
       }
@@ -69,18 +80,18 @@ const createUserControllers = (usersCollection, parcelsCollection) => {
     }
   };
 
-  const updateUserRole = async (req, res) => {
-    const { id } = req.params;
+  const updateUserRole = async (req: Request, res: Response): Promise<any> => {
+    const id = req.params.id as string;
     const { role } = req.body;
 
-    if (!["admin", "user"].includes(role)) {
+    if (!["admin", "user", "rider"].includes(role)) {
       return res.status(400).send({ message: "Invalid role" });
     }
 
     try {
       const result = await usersCollection.updateOne(
         { _id: new ObjectId(id) },
-        { $set: { role } },
+        { $set: { role } }
       );
       res.send({ message: `User role updated to ${role}`, result });
     } catch (error) {
@@ -89,9 +100,9 @@ const createUserControllers = (usersCollection, parcelsCollection) => {
     }
   };
 
-  const getUserDashboardSummary = async (req, res) => {
+  const getUserDashboardSummary = async (req: Request, res: Response): Promise<any> => {
     try {
-      const email = req.query.email;
+      const email = req.query.email as string | undefined;
       if (!email) {
         return res.status(400).send({ message: "User email is required" });
       }
@@ -102,15 +113,15 @@ const createUserControllers = (usersCollection, parcelsCollection) => {
 
       const totalParcels = userParcels.length;
 
-      const parcelStatusCounts = userParcels.reduce((acc, parcel) => {
+      const parcelStatusCounts = userParcels.reduce((acc: Record<string, number>, parcel: any) => {
         acc[parcel.delivery_status] = (acc[parcel.delivery_status] || 0) + 1;
         return acc;
       }, {});
 
       const recentParcels = userParcels
-        .sort((a, b) => new Date(b.creation_date) - new Date(a.creation_date))
+        .sort((a: any, b: any) => new Date(b.creation_date).getTime() - new Date(a.creation_date).getTime())
         .slice(0, 5)
-        .map((parcel) => ({
+        .map((parcel: any) => ({
           _id: parcel._id,
           status: parcel.delivery_status,
           origin: parcel.sender_address,
@@ -118,22 +129,20 @@ const createUserControllers = (usersCollection, parcelsCollection) => {
           creation_date: parcel.creation_date,
         }));
 
-      // Calculate spending history (example: group by month)
-      const spendingHistory = userParcels.reduce((acc, parcel) => {
+      // Calculate spending history (group by month)
+      const spendingHistory = userParcels.reduce((acc: Record<string, number>, parcel: any) => {
         const month = new Date(parcel.creation_date).toLocaleString("en-US", {
           month: "short",
           year: "numeric",
         });
-        acc[month] = (acc[month] || 0) + (parcel.cost || 0); // Assuming 'cost' field exists
+        acc[month] = (acc[month] || 0) + (parcel.cost || 0);
         return acc;
       }, {});
 
-      const formattedSpendingHistory = Object.keys(spendingHistory).map(
-        (month) => ({
-          month,
-          amount: spendingHistory[month],
-        }),
-      );
+      const formattedSpendingHistory = Object.keys(spendingHistory).map((month) => ({
+        month,
+        amount: spendingHistory[month],
+      }));
 
       res.send({
         totalParcels,
@@ -147,16 +156,16 @@ const createUserControllers = (usersCollection, parcelsCollection) => {
     }
   };
 
-  const getUserParcels = async (req, res) => {
+  const getUserParcels = async (req: Request, res: Response): Promise<any> => {
     try {
-      const email = req.query.email;
+      const email = req.query.email as string | undefined;
       if (!email) {
         return res.status(400).send({ message: "User email is required" });
       }
 
       const userParcels = await parcelsCollection
         .find({ created_by: email })
-        .sort({ creation_date: -1 }) // Sort by newest first
+        .sort({ creation_date: -1 })
         .toArray();
 
       res.send(userParcels);
