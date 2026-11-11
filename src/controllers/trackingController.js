@@ -1,4 +1,6 @@
 import { ObjectId } from "mongodb";
+import { explainTrackingStatus } from "../services/aiService.ts";
+import { aiCache } from "../utils/cache.ts";
 
 const createTrackingControllers = (
   trackingsCollection,
@@ -100,11 +102,58 @@ const createTrackingControllers = (
     }
   };
 
+  const getAITrackingExplanation = async (req, res) => {
+    try {
+      const trackingId = req.params.trackingId;
+
+      if (!trackingId) {
+        return res.status(400).json({ message: "Tracking ID is required" });
+      }
+
+      // 1. Fetch parcel
+      const parcel = await parcelsCollection.findOne({ tracking_id: trackingId });
+      if (!parcel) {
+        return res.status(404).json({ message: "Parcel not found" });
+      }
+
+      // Check In-Memory Cache (Key: trackingId + delivery_status + payment_status)
+      const cacheKey = `ai_explain_${trackingId}_${parcel.delivery_status}_${parcel.payment_status}`;
+      const cached = aiCache.get(cacheKey);
+      if (cached) {
+        return res.json({
+          ...cached,
+          from_cache: true,
+        });
+      }
+
+      // 2. Fetch tracking logs
+      const trackingLogs = await trackingsCollection
+        .find({ tracking_id: trackingId })
+        .sort({ timestamp: -1 })
+        .toArray();
+
+      // 3. Generate AI summary
+      const aiResponse = await explainTrackingStatus(parcel, trackingLogs);
+
+      // Save to cache (5 minutes TTL = 300,000ms)
+      aiCache.set(cacheKey, aiResponse, 300000);
+
+      res.json({
+        ...aiResponse,
+        from_cache: false,
+      });
+    } catch (error) {
+      console.error("Error generating AI tracking explanation:", error);
+      res.status(500).json({ message: "Failed to generate AI tracking explanation" });
+    }
+  };
+
   return {
     addTracking,
     getTrackings,
     createTracking,
     getParcelTrackingDetails,
+    getAITrackingExplanation,
   };
 };
 

@@ -16,6 +16,7 @@ const createTrackingRoutes = (
   );
 
   router.post("/", trackingController.addTracking);
+  router.get("/ai-explain/:trackingId", trackingController.getAITrackingExplanation);
   router.get("/:trackingId", trackingController.getTrackings);
   router.post("/", trackingController.createTracking);
   router.get("/details/:trackingId", trackingController.getParcelTrackingDetails);
