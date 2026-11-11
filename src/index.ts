@@ -1,5 +1,5 @@
-import express from "express";
-import cors from "cors";
+import express, { Request, Response } from "express";
+import cors, { CorsOptions } from "cors";
 import { MongoClient, ServerApiVersion } from "mongodb";
 import admin from "firebase-admin";
 import Stripe from "stripe";
@@ -11,19 +11,19 @@ import createBusinessRoutes from "./routes/businessRoutes.js";
 import createEmployeeRoutes from "./routes/employeeRoutes.js";
 import createTrackingRoutes from "./routes/trackingRoutes.js";
 
-const stripe = new Stripe(config.stripeKey);
+const stripe = new Stripe(config.stripeKey || "");
 
 const app = express();
 const port = config.port;
 
-const corsOptions = {
+const corsOptions: CorsOptions = {
   origin: [
     "http://localhost:5173",
     "https://zap-shift-abec3.web.app",
     "https://zap-shift-abec3.firebaseapp.com",
   ],
   credentials: true,
-  optionalSuccessStatus: 200,
+  optionsSuccessStatus: 200,
 };
 
 // Middlewares
@@ -51,7 +51,7 @@ const client = new MongoClient(uri, {
   },
 });
 
-async function run() {
+async function run(): Promise<void> {
   try {
     const db = client.db("parcelDB");
     const parcelsCollection = db.collection("parcels");
@@ -124,7 +124,7 @@ run().catch(console.dir);
 
 // --------------------------------------------------------------
 
-app.get("/", (req, res) => {
+app.get("/", (req: Request, res: Response) => {
   res.send("Percel Server is running");
 });
 
