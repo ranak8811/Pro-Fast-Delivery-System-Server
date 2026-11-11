@@ -30,9 +30,13 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-admin.initializeApp({
-  credential: admin.credential.cert(config.firebaseServiceAccount),
-});
+if (config.firebaseServiceAccount) {
+  admin.initializeApp({
+    credential: admin.credential.cert(config.firebaseServiceAccount),
+  });
+} else {
+  console.warn("⚠️ Firebase Admin not initialized: missing or invalid service account");
+}
 
 // --------------------------------------------------------------
 

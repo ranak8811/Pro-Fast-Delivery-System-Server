@@ -1,6 +1,6 @@
 import { ObjectId } from "mongodb";
-import { explainTrackingStatus } from "../services/aiService.ts";
-import { aiCache } from "../utils/cache.ts";
+import { explainTrackingStatus } from "../services/aiService.js";
+import { aiCache } from "../utils/cache.js";
 
 const createTrackingControllers = (
   trackingsCollection,
