@@ -2,13 +2,16 @@ import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import dotenv from "dotenv";
+import type { Parcel } from "../types/parcel.js";
+import type { TrackingEntry } from "../types/tracking.js";
+import type { AITrackingExplainResponse } from "../types/ai.js";
 
 dotenv.config();
 
 const PRIMARY_MODEL = "liquid/lfm-3-1.7b:free";
 const FALLBACK_MODEL = "meta-llama/llama-3.2-3b-instruct:free";
 
-const createModelInstance = (modelName) => {
+const createModelInstance = (modelName: string): ChatOpenAI => {
   return new ChatOpenAI({
     apiKey: process.env.OPENROUTER_API_KEY || "",
     modelName: modelName,
@@ -47,7 +50,10 @@ Rules:
 5. All responses MUST be strictly in the English language.
 `);
 
-const buildFallbackExplanation = (parcel, latestTracking) => {
+const buildFallbackExplanation = (
+  parcel: Parcel,
+  latestTracking?: TrackingEntry | null
+): string => {
   const trackingId = parcel.tracking_id;
   const status = parcel.delivery_status || "in_transit";
   const cost = parcel.cost || 0;
@@ -76,7 +82,10 @@ const buildFallbackExplanation = (parcel, latestTracking) => {
   }
 };
 
-export async function explainTrackingStatus(parcel, latestTracking = null) {
+export async function explainTrackingStatus(
+  parcel: Parcel,
+  latestTracking: TrackingEntry | null = null
+): Promise<AITrackingExplainResponse> {
   const trackingId = parcel.tracking_id;
   const deliveryStatus = parcel.delivery_status || "pending";
   const paymentStatus = parcel.payment_status || "unpaid";
@@ -120,7 +129,7 @@ export async function explainTrackingStatus(parcel, latestTracking = null) {
         generated_at: new Date().toISOString(),
       };
     }
-  } catch (primaryErr) {
+  } catch (primaryErr: any) {
     console.warn(`[AI Service] Primary model (${primaryModel}) failed:`, primaryErr?.message || primaryErr);
   }
 
@@ -140,7 +149,7 @@ export async function explainTrackingStatus(parcel, latestTracking = null) {
         generated_at: new Date().toISOString(),
       };
     }
-  } catch (secondaryErr) {
+  } catch (secondaryErr: any) {
     console.warn(`[AI Service] Fallback model (${fallbackModel}) failed:`, secondaryErr?.message || secondaryErr);
   }
 
