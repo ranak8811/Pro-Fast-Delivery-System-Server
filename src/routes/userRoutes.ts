@@ -1,12 +1,19 @@
-import express from "express";
+import express, { Router, Request, Response, NextFunction } from "express";
+import { Collection, Document } from "mongodb";
 import createUserControllers from "../controllers/userController.js";
 
+export type MiddlewareFunction = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => void | Promise<void>;
+
 const createUserRoutes = (
-  usersCollection,
-  parcelsCollection,
-  verifyFBToken,
-  verifyAdmin,
-) => {
+  usersCollection: Collection<Document>,
+  parcelsCollection: Collection<Document>,
+  verifyFBToken: MiddlewareFunction,
+  verifyAdmin: MiddlewareFunction,
+): Router => {
   const router = express.Router();
   const userController = createUserControllers(
     usersCollection,
