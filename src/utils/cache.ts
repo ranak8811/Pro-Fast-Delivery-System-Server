@@ -1,16 +1,24 @@
-export class MemoryCache {
-  constructor(defaultTtlMs = 1000 * 60 * 5) {
-    this.cache = new Map();
+export interface CacheItem<T> {
+  value: T;
+  expiresAt: number;
+}
+
+export class MemoryCache<T = any> {
+  private cache: Map<string, CacheItem<T>>;
+  private defaultTtlMs: number;
+
+  constructor(defaultTtlMs: number = 1000 * 60 * 5) {
+    this.cache = new Map<string, CacheItem<T>>();
     this.defaultTtlMs = defaultTtlMs;
   }
 
-  set(key, value, ttlMs) {
+  set(key: string, value: T, ttlMs?: number): void {
     const ttl = ttlMs !== undefined ? ttlMs : this.defaultTtlMs;
     const expiresAt = Date.now() + ttl;
     this.cache.set(key, { value, expiresAt });
   }
 
-  get(key) {
+  get(key: string): T | null {
     const item = this.cache.get(key);
     if (!item) return null;
 
@@ -22,15 +30,15 @@ export class MemoryCache {
     return item.value;
   }
 
-  delete(key) {
+  delete(key: string): boolean {
     return this.cache.delete(key);
   }
 
-  clear() {
+  clear(): void {
     this.cache.clear();
   }
 
-  cleanup() {
+  cleanup(): void {
     const now = Date.now();
     for (const [key, item] of this.cache.entries()) {
       if (now > item.expiresAt) {
@@ -39,7 +47,7 @@ export class MemoryCache {
     }
   }
 
-  size() {
+  size(): number {
     this.cleanup();
     return this.cache.size;
   }
