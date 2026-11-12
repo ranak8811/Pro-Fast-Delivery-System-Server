@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { Collection, Document, ObjectId, Filter, Sort } from "mongodb";
+import { parsePagination } from "../utils/pagination.js";
 
 export interface EmployeeController {
   createRider: (req: Request, res: Response) => Promise<void>;
@@ -27,8 +28,30 @@ const createEmployeeControllers = (
     res: Response,
   ): Promise<void> => {
     try {
+      const { page, limit } = req.query;
+      const query: Filter<Document> = { status: "pending" };
+      const pagination = parsePagination(page, limit);
+
+      if (pagination.isPaginated) {
+        const total = await ridersCollection.countDocuments(query);
+        const pendingRiders = await ridersCollection
+          .find(query)
+          .skip(pagination.skip)
+          .limit(pagination.limit)
+          .toArray();
+
+        res.send({
+          data: pendingRiders,
+          total,
+          page: pagination.page,
+          limit: pagination.limit,
+          totalPages: Math.ceil(total / pagination.limit),
+        });
+        return;
+      }
+
       const pendingRiders = await ridersCollection
-        .find({ status: "pending" })
+        .find(query)
         .toArray();
 
       res.send(pendingRiders);
@@ -42,8 +65,48 @@ const createEmployeeControllers = (
     req: Request,
     res: Response,
   ): Promise<void> => {
-    const result = await ridersCollection.find({ status: "active" }).toArray();
-    res.send(result);
+    try {
+      const { page, limit, search } = req.query as {
+        page?: string;
+        limit?: string;
+        search?: string;
+      };
+
+      const query: Filter<Document> = { status: "active" };
+      if (search) {
+        query.$or = [
+          { name: { $regex: search, $options: "i" } },
+          { email: { $regex: search, $options: "i" } },
+          { phone: { $regex: search, $options: "i" } },
+        ];
+      }
+
+      const pagination = parsePagination(page, limit);
+
+      if (pagination.isPaginated) {
+        const total = await ridersCollection.countDocuments(query);
+        const activeRiders = await ridersCollection
+          .find(query)
+          .skip(pagination.skip)
+          .limit(pagination.limit)
+          .toArray();
+
+        res.send({
+          data: activeRiders,
+          total,
+          page: pagination.page,
+          limit: pagination.limit,
+          totalPages: Math.ceil(total / pagination.limit),
+        });
+        return;
+      }
+
+      const result = await ridersCollection.find(query).toArray();
+      res.send(result);
+    } catch (error) {
+      console.error("Failed to load active riders:", error);
+      res.status(500).send({ message: "Failed to load active riders" });
+    }
   };
 
   const getAvailableRiders = async (
@@ -104,7 +167,11 @@ const createEmployeeControllers = (
     res: Response,
   ): Promise<void> => {
     try {
-      const email = req.query.email as string | undefined;
+      const { email, page, limit } = req.query as {
+        email?: string;
+        page?: string;
+        limit?: string;
+      };
 
       if (!email) {
         res.status(400).send({ message: "Rider email is required" });
@@ -117,6 +184,26 @@ const createEmployeeControllers = (
       };
 
       const sortOption: Sort = { creation_date: -1 };
+      const pagination = parsePagination(page, limit);
+
+      if (pagination.isPaginated) {
+        const total = await parcelsCollection.countDocuments(query);
+        const parcels = await parcelsCollection
+          .find(query)
+          .sort(sortOption)
+          .skip(pagination.skip)
+          .limit(pagination.limit)
+          .toArray();
+
+        res.send({
+          data: parcels,
+          total,
+          page: pagination.page,
+          limit: pagination.limit,
+          totalPages: Math.ceil(total / pagination.limit),
+        });
+        return;
+      }
 
       const parcels = await parcelsCollection
         .find(query)

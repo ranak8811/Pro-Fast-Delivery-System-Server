@@ -3,6 +3,8 @@ import { Collection, Document, ObjectId, Filter, Sort } from "mongodb";
 import Stripe from "stripe";
 import { AuthenticatedRequest } from "../middleware/authMiddleware.js";
 
+import { parsePagination } from "../utils/pagination.js";
+
 export interface PaymentController {
   createPaymentIntent: (req: Request, res: Response) => Promise<void>;
   recordPayment: (req: Request, res: Response) => Promise<void>;
@@ -88,7 +90,11 @@ const createPaymentControllers = (
     res: Response,
   ): Promise<void> => {
     try {
-      const userEmail = req.query.email as string | undefined;
+      const { email: userEmail, page, limit } = req.query as {
+        email?: string;
+        page?: string;
+        limit?: string;
+      };
 
       if (req.decoded?.email !== userEmail) {
         res.status(403).send({ message: "Forbidden Access" });
@@ -97,6 +103,26 @@ const createPaymentControllers = (
 
       const query: Filter<Document> = userEmail ? { email: userEmail } : {};
       const sortOption: Sort = { paid_at: -1 }; // Latest first
+      const pagination = parsePagination(page, limit);
+
+      if (pagination.isPaginated) {
+        const total = await paymentsCollection.countDocuments(query);
+        const payments = await paymentsCollection
+          .find(query)
+          .sort(sortOption)
+          .skip(pagination.skip)
+          .limit(pagination.limit)
+          .toArray();
+
+        res.send({
+          data: payments,
+          total,
+          page: pagination.page,
+          limit: pagination.limit,
+          totalPages: Math.ceil(total / pagination.limit),
+        });
+        return;
+      }
 
       const payments = await paymentsCollection
         .find(query)
