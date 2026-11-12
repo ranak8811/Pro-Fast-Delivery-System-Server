@@ -1,5 +1,15 @@
 # Pro-Fast Delivery System Server
 
+<p align="center">
+  <a href="https://nodejs.org"><img src="https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js" /></a>
+  <a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" /></a>
+  <a href="https://expressjs.com"><img src="https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express.js" /></a>
+  <a href="https://www.mongodb.com"><img src="https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB" /></a>
+  <a href="https://firebase.google.com"><img src="https://img.shields.io/badge/Firebase_Admin-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" alt="Firebase Admin" /></a>
+  <a href="https://stripe.com"><img src="https://img.shields.io/badge/Stripe_API-008CDD?style=for-the-badge&logo=stripe&logoColor=white" alt="Stripe API" /></a>
+  <a href="https://vercel.com"><img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel" /></a>
+</p>
+
 The backend REST API server powering the Pro-Fast Delivery System platform, built with Node.js, Express, TypeScript, and MongoDB. Provides secure role-based services for parcel logistics, rider fleets, Stripe payment processing, and tracking telemetry.
 
 ## Live Endpoints & Client
@@ -41,12 +51,18 @@ All major list endpoints support query parameters `?page=1&limit=10&search=keywo
 
 ## Technologies Used
 
-- **Runtime & Language:** Node.js, TypeScript
-- **Framework:** Express.js
-- **Database:** MongoDB Native Driver
-- **Authentication:** Firebase Admin SDK
-- **Payment Processing:** Stripe Node SDK
-- **Deployment:** Vercel Serverless Functions
+<div align="center">
+
+| Category | Technologies & Tools |
+|---|---|
+| **Runtime & Language** | ![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white) ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white) ![JavaScript](https://img.shields.io/badge/ES6+-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black) |
+| **Backend Framework** | ![Express.js](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white) |
+| **Database & ODM** | ![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white) ![MongoDB Atlas](https://img.shields.io/badge/MongoDB_Atlas-00ED64?style=for-the-badge&logo=mongodb&logoColor=black) |
+| **Authentication & Security** | ![Firebase Admin](https://img.shields.io/badge/Firebase_Admin-FFCA28?style=for-the-badge&logo=firebase&logoColor=black) ![JSON Web Tokens](https://img.shields.io/badge/JWT_Auth-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white) |
+| **Payment Gateway** | ![Stripe API](https://img.shields.io/badge/Stripe_SDK-008CDD?style=for-the-badge&logo=stripe&logoColor=white) |
+| **Deployment & Cloud** | ![Vercel](https://img.shields.io/badge/Vercel_Serverless-000000?style=for-the-badge&logo=vercel&logoColor=white) |
+
+</div>
 
 ---
 
