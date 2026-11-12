@@ -188,8 +188,30 @@ const createUserControllers = (
         return res.status(400).send({ message: "User email is required" });
       }
 
+      const pagination = parsePagination(req.query.page, req.query.limit, 10);
+      const query: any = { created_by: email };
+
+      if (pagination.isPaginated) {
+        const [total, data] = await Promise.all([
+          parcelsCollection.countDocuments(query),
+          parcelsCollection
+            .find(query)
+            .sort({ creation_date: -1 })
+            .skip(pagination.skip)
+            .limit(pagination.limit)
+            .toArray(),
+        ]);
+        return res.send({
+          data,
+          total,
+          page: pagination.page,
+          limit: pagination.limit,
+          totalPages: Math.ceil(total / pagination.limit),
+        });
+      }
+
       const userParcels = await parcelsCollection
-        .find({ created_by: email })
+        .find(query)
         .sort({ creation_date: -1 })
         .toArray();
 
