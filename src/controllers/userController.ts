@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { Collection, ObjectId } from "mongodb";
+import { parsePagination } from "../utils/pagination.js";
 
 export interface UserController {
   createUser: (req: Request, res: Response) => Promise<any>;
@@ -41,16 +42,40 @@ const createUserControllers = (
   };
 
   const searchUsers = async (req: Request, res: Response): Promise<any> => {
-    const emailQuery = req.query.email as string | undefined;
+    const { email: emailQuery, page, limit } = req.query as {
+      email?: string;
+      page?: string;
+      limit?: string;
+    };
+
     if (!emailQuery) {
       return res.status(400).send({ message: "Missing email query" });
     }
 
     const regex = new RegExp(emailQuery, "i"); // case-insensitive partial match
+    const query = { email: { $regex: regex } };
+    const pagination = parsePagination(page, limit, 10);
 
     try {
+      if (pagination.isPaginated) {
+        const total = await usersCollection.countDocuments(query);
+        const users = await usersCollection
+          .find(query)
+          .skip(pagination.skip)
+          .limit(pagination.limit)
+          .toArray();
+
+        return res.send({
+          data: users,
+          total,
+          page: pagination.page,
+          limit: pagination.limit,
+          totalPages: Math.ceil(total / pagination.limit),
+        });
+      }
+
       const users = await usersCollection
-        .find({ email: { $regex: regex } })
+        .find(query)
         .limit(10)
         .toArray();
       res.send(users);
