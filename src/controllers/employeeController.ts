@@ -1,17 +1,31 @@
-import { ObjectId } from "mongodb";
+import { Request, Response } from "express";
+import { Collection, Document, ObjectId, Filter, Sort } from "mongodb";
+
+export interface EmployeeController {
+  createRider: (req: Request, res: Response) => Promise<void>;
+  getPendingRiders: (req: Request, res: Response) => Promise<void>;
+  getActiveRiders: (req: Request, res: Response) => Promise<void>;
+  getAvailableRiders: (req: Request, res: Response) => Promise<void>;
+  updateRiderStatus: (req: Request, res: Response) => Promise<void>;
+  getRiderParcels: (req: Request, res: Response) => Promise<void>;
+  getRiderDashboardSummary: (req: Request, res: Response) => Promise<void>;
+}
 
 const createEmployeeControllers = (
-  ridersCollection,
-  usersCollection,
-  parcelsCollection,
-) => {
-  const createRider = async (req, res) => {
+  ridersCollection: Collection<Document>,
+  usersCollection: Collection<Document>,
+  parcelsCollection: Collection<Document>,
+): EmployeeController => {
+  const createRider = async (req: Request, res: Response): Promise<void> => {
     const rider = req.body;
     const result = await ridersCollection.insertOne(rider);
     res.send(result);
   };
 
-  const getPendingRiders = async (req, res) => {
+  const getPendingRiders = async (
+    req: Request,
+    res: Response,
+  ): Promise<void> => {
     try {
       const pendingRiders = await ridersCollection
         .find({ status: "pending" })
@@ -24,31 +38,38 @@ const createEmployeeControllers = (
     }
   };
 
-  const getActiveRiders = async (req, res) => {
+  const getActiveRiders = async (
+    req: Request,
+    res: Response,
+  ): Promise<void> => {
     const result = await ridersCollection.find({ status: "active" }).toArray();
     res.send(result);
   };
 
-  const getAvailableRiders = async (req, res) => {
+  const getAvailableRiders = async (
+    req: Request,
+    res: Response,
+  ): Promise<void> => {
     const { district } = req.query;
 
     try {
-      const riders = await ridersCollection
-        .find({
-          district,
-          // status: { $in: ["approved", "active"] },
-          // work_status: "available",
-        })
-        .toArray();
+      const query: Filter<Document> = {};
+      if (district) {
+        query.district = district;
+      }
 
+      const riders = await ridersCollection.find(query).toArray();
       res.send(riders);
     } catch (err) {
       res.status(500).send({ message: "Failed to load riders" });
     }
   };
 
-  const updateRiderStatus = async (req, res) => {
-    const { id } = req.params;
+  const updateRiderStatus = async (
+    req: Request,
+    res: Response,
+  ): Promise<void> => {
+    const id = req.params.id as string;
     const { status, email } = req.body;
     const query = { _id: new ObjectId(id) };
     const updateDoc = {
@@ -61,7 +82,7 @@ const createEmployeeControllers = (
       const result = await ridersCollection.updateOne(query, updateDoc);
 
       // updating user role for accepting rider
-      if (status === "active") {
+      if (status === "active" && email) {
         const userQuery = { email };
         const userUpdatedDoc = {
           $set: {
@@ -69,10 +90,7 @@ const createEmployeeControllers = (
           },
         };
 
-        const roleResult = await usersCollection.updateOne(
-          userQuery,
-          userUpdatedDoc,
-        );
+        await usersCollection.updateOne(userQuery, userUpdatedDoc);
       }
 
       res.send(result);
@@ -81,24 +99,29 @@ const createEmployeeControllers = (
     }
   };
 
-  const getRiderParcels = async (req, res) => {
+  const getRiderParcels = async (
+    req: Request,
+    res: Response,
+  ): Promise<void> => {
     try {
-      const email = req.query.email;
+      const email = req.query.email as string | undefined;
 
       if (!email) {
-        return res.status(400).send({ message: "Rider email is required" });
+        res.status(400).send({ message: "Rider email is required" });
+        return;
       }
 
-      const query = {
+      const query: Filter<Document> = {
         assigned_rider_email: email,
         delivery_status: { $in: ["rider_assigned", "in_transit"] },
       };
 
-      const options = {
-        sort: { creation_date: -1 }, // Newest first
-      };
+      const sortOption: Sort = { creation_date: -1 };
 
-      const parcels = await parcelsCollection.find(query, options).toArray();
+      const parcels = await parcelsCollection
+        .find(query)
+        .sort(sortOption)
+        .toArray();
       res.send(parcels);
     } catch (error) {
       console.error("Error fetching rider tasks:", error);
@@ -106,11 +129,15 @@ const createEmployeeControllers = (
     }
   };
 
-  const getRiderDashboardSummary = async (req, res) => {
+  const getRiderDashboardSummary = async (
+    req: Request,
+    res: Response,
+  ): Promise<void> => {
     try {
-      const email = req.query.email;
+      const email = req.query.email as string | undefined;
       if (!email) {
-        return res.status(400).send({ message: "Rider email is required" });
+        res.status(400).send({ message: "Rider email is required" });
+        return;
       }
 
       const riderParcels = await parcelsCollection
@@ -155,11 +182,11 @@ const createEmployeeControllers = (
 
       // Calculate total earnings and monthly earnings
       let totalEarnings = 0;
-      const monthlyEarnings = {}; // { 'Jan 2026': 100, 'Feb 2026': 150 }
+      const monthlyEarnings: Record<string, number> = {}; // { 'Jan 2026': 100, 'Feb 2026': 150 }
 
       riderParcels.forEach((parcel) => {
         if (parcel.delivery_status === "delivered" && parcel.rider_earning) {
-          totalEarnings += parcel.rider_earning;
+          totalEarnings += Number(parcel.rider_earning) || 0;
           const month = new Date(
             parcel.delivered_at || parcel.creation_date,
           ).toLocaleString("en-US", {
@@ -167,7 +194,7 @@ const createEmployeeControllers = (
             year: "numeric",
           });
           monthlyEarnings[month] =
-            (monthlyEarnings[month] || 0) + parcel.rider_earning;
+            (monthlyEarnings[month] || 0) + (Number(parcel.rider_earning) || 0);
         }
       });
 
@@ -179,7 +206,11 @@ const createEmployeeControllers = (
       );
 
       const recentDeliveries = riderParcels
-        .sort((a, b) => new Date(b.creation_date) - new Date(a.creation_date))
+        .sort(
+          (a, b) =>
+            new Date(b.creation_date).getTime() -
+            new Date(a.creation_date).getTime(),
+        )
         .slice(0, 5)
         .map((parcel) => ({
           _id: parcel._id,

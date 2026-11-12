@@ -1,18 +1,25 @@
-import express from "express";
+import express, { Router, Request, Response, NextFunction } from "express";
+import { Collection, Document } from "mongodb";
 import createEmployeeControllers from "../controllers/employeeController.js";
 
+export type MiddlewareFunction = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => void | Promise<void>;
+
 const createEmployeeRoutes = (
-  ridersCollection,
-  usersCollection,
-  parcelsCollection, // Add parcelsCollection as it's used in getRiderParcels
-  verifyFBToken,
-  verifyAdmin,
-) => {
+  ridersCollection: Collection<Document>,
+  usersCollection: Collection<Document>,
+  parcelsCollection: Collection<Document>,
+  verifyFBToken: MiddlewareFunction,
+  verifyAdmin: MiddlewareFunction,
+): Router => {
   const router = express.Router();
   const employeeController = createEmployeeControllers(
     ridersCollection,
     usersCollection,
-    parcelsCollection, // Pass parcelsCollection
+    parcelsCollection,
   );
 
   router.post("/", employeeController.createRider);
@@ -28,9 +35,9 @@ const createEmployeeRoutes = (
     verifyAdmin,
     employeeController.getActiveRiders,
   );
-  router.get("/available", employeeController.getAvailableRiders); // No middleware for available riders
+  router.get("/available", employeeController.getAvailableRiders);
   router.patch("/:id/status", employeeController.updateRiderStatus);
-  router.get("/parcels", verifyFBToken, employeeController.getRiderParcels); // For specific rider's parcels
+  router.get("/parcels", verifyFBToken, employeeController.getRiderParcels);
   router.get(
     "/dashboard-summary",
     verifyFBToken,

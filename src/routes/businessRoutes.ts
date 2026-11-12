@@ -1,12 +1,19 @@
-import express from "express";
+import express, { Router, Request, Response, NextFunction } from "express";
+import { Collection, Document } from "mongodb";
 import createParcelControllers from "../controllers/businessController.js";
 
+export type MiddlewareFunction = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => void | Promise<void>;
+
 const createBusinessRoutes = (
-  parcelsCollection,
-  ridersCollection,
-  verifyFBToken,
-  verifyRider,
-) => {
+  parcelsCollection: Collection<Document>,
+  ridersCollection: Collection<Document>,
+  verifyFBToken: MiddlewareFunction,
+  verifyRider: MiddlewareFunction,
+): Router => {
   const router = express.Router();
   const parcelController = createParcelControllers(
     parcelsCollection,

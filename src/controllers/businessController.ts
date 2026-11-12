@@ -1,12 +1,32 @@
-import { ObjectId } from "mongodb";
+import { Request, Response } from "express";
+import { Collection, ObjectId, Sort } from "mongodb";
 
-const createParcelControllers = (parcelsCollection, ridersCollection) => {
-  const getParcels = async (req, res) => {
+export interface BusinessController {
+  getParcels: (req: Request, res: Response) => Promise<any>;
+  getCompletedParcelsForRider: (req: Request, res: Response) => Promise<any>;
+  cashoutParcel: (req: Request, res: Response) => Promise<any>;
+  createParcel: (req: Request, res: Response) => Promise<any>;
+  assignRider: (req: Request, res: Response) => Promise<any>;
+  deleteParcel: (req: Request, res: Response) => Promise<any>;
+  getParcelById: (req: Request, res: Response) => Promise<any>;
+  getParcelStatusCount: (req: Request, res: Response) => Promise<any>;
+  updateParcelStatus: (req: Request, res: Response) => Promise<any>;
+}
+
+const createParcelControllers = (
+  parcelsCollection: Collection<any>,
+  ridersCollection: Collection<any>
+): BusinessController => {
+  const getParcels = async (req: Request, res: Response): Promise<any> => {
     try {
-      const { email, payment_status, delivery_status } = req.query;
-      let query = {};
+      const { email, payment_status, delivery_status } = req.query as {
+        email?: string;
+        payment_status?: string;
+        delivery_status?: string;
+      };
+      let query: any = {};
       if (email) {
-        query = { created_by: email };
+        query.created_by = email;
       }
 
       if (payment_status) {
@@ -17,11 +37,9 @@ const createParcelControllers = (parcelsCollection, ridersCollection) => {
         query.delivery_status = delivery_status;
       }
 
-      const options = {
-        sort: { createdAt: -1 }, // Newest first
-      };
+      const sort: Sort = { createdAt: -1 };
 
-      const parcels = await parcelsCollection.find(query, options).toArray();
+      const parcels = await parcelsCollection.find(query).sort(sort).toArray();
       res.send(parcels);
     } catch (error) {
       console.error("Error fetching parcels:", error);
@@ -29,9 +47,9 @@ const createParcelControllers = (parcelsCollection, ridersCollection) => {
     }
   };
 
-  const getCompletedParcelsForRider = async (req, res) => {
+  const getCompletedParcelsForRider = async (req: Request, res: Response): Promise<any> => {
     try {
-      const email = req.query.email;
+      const email = req.query.email as string | undefined;
 
       if (!email) {
         return res.status(400).send({ message: "Rider email is required" });
@@ -44,12 +62,11 @@ const createParcelControllers = (parcelsCollection, ridersCollection) => {
         },
       };
 
-      const options = {
-        sort: { creation_date: -1 }, // Latest first
-      };
+      const sort: Sort = { creation_date: -1 };
 
       const completedParcels = await parcelsCollection
-        .find(query, options)
+        .find(query)
+        .sort(sort)
         .toArray();
 
       res.send(completedParcels);
@@ -59,8 +76,8 @@ const createParcelControllers = (parcelsCollection, ridersCollection) => {
     }
   };
 
-  const cashoutParcel = async (req, res) => {
-    const id = req.params.id;
+  const cashoutParcel = async (req: Request, res: Response): Promise<any> => {
+    const id = req.params.id as string;
     const result = await parcelsCollection.updateOne(
       { _id: new ObjectId(id) },
       {
@@ -68,12 +85,12 @@ const createParcelControllers = (parcelsCollection, ridersCollection) => {
           cashout_status: "cashed_out",
           cashed_out_at: new Date(),
         },
-      },
+      }
     );
     res.send(result);
   };
 
-  const createParcel = async (req, res) => {
+  const createParcel = async (req: Request, res: Response): Promise<any> => {
     try {
       const newParcel = req.body;
       const result = await parcelsCollection.insertOne(newParcel);
@@ -84,8 +101,8 @@ const createParcelControllers = (parcelsCollection, ridersCollection) => {
     }
   };
 
-  const assignRider = async (req, res) => {
-    const parcelId = req.params.id;
+  const assignRider = async (req: Request, res: Response): Promise<any> => {
+    const parcelId = req.params.id as string;
     const { riderId, riderName, riderEmail } = req.body;
 
     try {
@@ -99,7 +116,7 @@ const createParcelControllers = (parcelsCollection, ridersCollection) => {
             assigned_rider_email: riderEmail,
             assigned_rider_name: riderName,
           },
-        },
+        }
       );
 
       // Update rider
@@ -109,7 +126,7 @@ const createParcelControllers = (parcelsCollection, ridersCollection) => {
           $set: {
             work_status: "in_delivery",
           },
-        },
+        }
       );
 
       res.send({ message: "Rider assigned" });
@@ -119,9 +136,9 @@ const createParcelControllers = (parcelsCollection, ridersCollection) => {
     }
   };
 
-  const deleteParcel = async (req, res) => {
+  const deleteParcel = async (req: Request, res: Response): Promise<any> => {
     try {
-      const id = req.params.id;
+      const id = req.params.id as string;
 
       const result = await parcelsCollection.deleteOne({
         _id: new ObjectId(id),
@@ -134,9 +151,9 @@ const createParcelControllers = (parcelsCollection, ridersCollection) => {
     }
   };
 
-  const getParcelById = async (req, res) => {
+  const getParcelById = async (req: Request, res: Response): Promise<any> => {
     try {
-      const id = req.params.id;
+      const id = req.params.id as string;
       const query = { _id: new ObjectId(id) };
       const result = await parcelsCollection.findOne(query);
       res.send(result);
@@ -146,7 +163,7 @@ const createParcelControllers = (parcelsCollection, ridersCollection) => {
     }
   };
 
-  const getParcelStatusCount = async (req, res) => {
+  const getParcelStatusCount = async (req: Request, res: Response): Promise<any> => {
     const pipeline = [
       {
         $group: {
@@ -169,10 +186,10 @@ const createParcelControllers = (parcelsCollection, ridersCollection) => {
     res.send(result);
   };
 
-  const updateParcelStatus = async (req, res) => {
-    const parcelId = req.params.id;
+  const updateParcelStatus = async (req: Request, res: Response): Promise<any> => {
+    const parcelId = req.params.id as string;
     const { status } = req.body;
-    const updatedDoc = {
+    const updatedDoc: any = {
       delivery_status: status,
     };
 
@@ -187,7 +204,7 @@ const createParcelControllers = (parcelsCollection, ridersCollection) => {
         { _id: new ObjectId(parcelId) },
         {
           $set: updatedDoc,
-        },
+        }
       );
       res.send(result);
     } catch (error) {
