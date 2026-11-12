@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { Collection, ObjectId, Sort } from "mongodb";
+import { parsePagination } from "../utils/pagination.js";
 
 export interface BusinessController {
   getParcels: (req: Request, res: Response) => Promise<any>;
@@ -19,10 +20,13 @@ const createParcelControllers = (
 ): BusinessController => {
   const getParcels = async (req: Request, res: Response): Promise<any> => {
     try {
-      const { email, payment_status, delivery_status } = req.query as {
+      const { email, payment_status, delivery_status, page, limit, search } = req.query as {
         email?: string;
         payment_status?: string;
         delivery_status?: string;
+        page?: string;
+        limit?: string;
+        search?: string;
       };
       let query: any = {};
       if (email) {
@@ -37,7 +41,33 @@ const createParcelControllers = (
         query.delivery_status = delivery_status;
       }
 
-      const sort: Sort = { createdAt: -1 };
+      if (search) {
+        query.$or = [
+          { title: { $regex: search, $options: "i" } },
+          { tracking_id: { $regex: search, $options: "i" } },
+        ];
+      }
+
+      const sort: Sort = { createdAt: -1, creation_date: -1 };
+      const pagination = parsePagination(page, limit);
+
+      if (pagination.isPaginated) {
+        const total = await parcelsCollection.countDocuments(query);
+        const parcels = await parcelsCollection
+          .find(query)
+          .sort(sort)
+          .skip(pagination.skip)
+          .limit(pagination.limit)
+          .toArray();
+
+        return res.send({
+          data: parcels,
+          total,
+          page: pagination.page,
+          limit: pagination.limit,
+          totalPages: Math.ceil(total / pagination.limit),
+        });
+      }
 
       const parcels = await parcelsCollection.find(query).sort(sort).toArray();
       res.send(parcels);
@@ -49,7 +79,11 @@ const createParcelControllers = (
 
   const getCompletedParcelsForRider = async (req: Request, res: Response): Promise<any> => {
     try {
-      const email = req.query.email as string | undefined;
+      const { email, page, limit } = req.query as {
+        email?: string;
+        page?: string;
+        limit?: string;
+      };
 
       if (!email) {
         return res.status(400).send({ message: "Rider email is required" });
@@ -63,6 +97,25 @@ const createParcelControllers = (
       };
 
       const sort: Sort = { creation_date: -1 };
+      const pagination = parsePagination(page, limit);
+
+      if (pagination.isPaginated) {
+        const total = await parcelsCollection.countDocuments(query);
+        const completedParcels = await parcelsCollection
+          .find(query)
+          .sort(sort)
+          .skip(pagination.skip)
+          .limit(pagination.limit)
+          .toArray();
+
+        return res.send({
+          data: completedParcels,
+          total,
+          page: pagination.page,
+          limit: pagination.limit,
+          totalPages: Math.ceil(total / pagination.limit),
+        });
+      }
 
       const completedParcels = await parcelsCollection
         .find(query)
